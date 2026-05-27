@@ -1,11 +1,9 @@
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State
+from aiogram.fsm.state import StatesGroup
 
 
-class AddExpenseState(StatesGroup):
+class AddTransactionState(StatesGroup):
+
     waiting_for_amount = State()
-    waiting_for_category = State()
 
-
-class AddIncomeState(StatesGroup):
-    waiting_for_amount = State()
     waiting_for_category = State()

@@ -2,6 +2,8 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram import F
+from aiogram.fsm.context import FSMContext
+from states.transaction_states import AddTransactionState
 
 from repositories.transaction_repository import TransactionRepository
 
@@ -108,23 +110,108 @@ async def view_transactions_handler(message: Message):
 
 
 @router.message(F.text == "➕ Доход")
-async def income_button_handler(message: Message):
+async def income_start(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        AddTransactionState.waiting_for_amount
+    )
+
+    await state.update_data(
+        transaction_type="income"
+    )
 
     await message.answer(
-        "Введите доход:\n\n"
-        "Пример:\n"
-        "/add_income 50000 зарплата"
+        "💰 Введите сумму дохода:"
     )
 
 
 @router.message(F.text == "➖ Расход")
-async def expense_button_handler(message: Message):
+async def expense_start(
+    message: Message,
+    state: FSMContext
+):
+
+    await state.set_state(
+        AddTransactionState.waiting_for_amount
+    )
+
+    await state.update_data(
+        transaction_type="expense"
+    )
 
     await message.answer(
-        "Введите расход:\n\n"
-        "Пример:\n"
-        "/add_expense 2500 еда"
+        "💸 Введите сумму расхода:"
     )
+
+
+@router.message(AddTransactionState.waiting_for_amount)
+async def process_amount(
+    message: Message,
+    state: FSMContext
+):
+
+    try:
+
+        amount = float(message.text)
+
+    except ValueError:
+
+        await message.answer(
+            "Введите корректную сумму"
+        )
+
+        return
+
+    await state.update_data(
+        amount=amount
+    )
+
+    await state.set_state(
+        AddTransactionState.waiting_for_category
+    )
+
+    await message.answer(
+        "📂 Введите категорию:"
+    )
+
+
+@router.message(AddTransactionState.waiting_for_category)
+async def process_category(
+    message: Message,
+    state: FSMContext
+):
+
+    data = await state.get_data()
+
+    transaction_type = data["transaction_type"]
+
+    amount = data["amount"]
+
+    category = message.text
+
+    await TransactionRepository.add_transaction(
+        user_id=message.from_user.id,
+        transaction_type=transaction_type,
+        amount=amount,
+        category=category
+    )
+
+    transaction_name = (
+        "Расход"
+        if transaction_type == "expense"
+        else "Доход"
+    )
+
+    await message.answer(
+        f"✅ {transaction_name} добавлен\n\n"
+        f"💵 Сумма: {amount} ₽\n"
+        f"📂 Категория: {category}"
+    )
+
+    await state.clear()
 
 
 @router.message(F.text == "📄 Транзакции")
