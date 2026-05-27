@@ -6,12 +6,14 @@ from aiogram.client.default import DefaultBotProperties
 
 from config import BOT_TOKEN
 
+from database.db import create_tables
 from handlers.start import router as start_router
 from handlers.help import router as help_router
 from handlers.auth import router as auth_router
 from handlers.transactions import router as transactions_router
 from handlers.goals import router as goals_router
 from handlers.statistics import router as statistics_router
+
 
 
 bot = Bot(
@@ -33,7 +35,10 @@ dp.include_router(statistics_router)
 
 
 async def main():
+    await create_tables()
+
     print("Bot started")
+
     await dp.start_polling(bot)
 
 
