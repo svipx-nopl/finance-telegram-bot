@@ -1,39 +1,115 @@
+from datetime import datetime
 import aiosqlite
-from config import DATABASE_NAME
+
+DATABASE_NAME = "finance.db"
+
 
 class TransactionRepository:
 
     @staticmethod
-    async def add_transaction(user_id, t_type, amount, category):
+    async def add_transaction(
+        user_id: int,
+        transaction_type: str,
+        amount: float,
+        category: str
+    ):
+
         async with aiosqlite.connect(DATABASE_NAME) as db:
+
             await db.execute(
                 """
                 INSERT INTO transactions
-                (user_id, type, amount, category)
-                VALUES (?, ?, ?, ?)
+                (user_id, type, amount, category, created_at)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (user_id, t_type, amount, category)
+                (
+                    user_id,
+                    transaction_type,
+                    amount,
+                    category,
+                    datetime.now().strftime("%d.%m.%Y %H:%M")
+                )
             )
+
             await db.commit()
 
     @staticmethod
-    async def get_transactions(user_id):
+    async def get_transactions(user_id: int):
+
         async with aiosqlite.connect(DATABASE_NAME) as db:
+
             cursor = await db.execute(
-                "SELECT * FROM transactions WHERE user_id=?",
+                """
+                SELECT type, amount, category, created_at
+                FROM transactions
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                """,
                 (user_id,)
             )
-            return await cursor.fetchall()
+
+            transactions = await cursor.fetchall()
+
+            return transactions
 
     @staticmethod
-    async def get_transactions_by_period(user_id, start_date):
+    async def get_statistics(user_id: int):
+
+        async with aiosqlite.connect(DATABASE_NAME) as db:
+
+            income_cursor = await db.execute(
+                """
+                SELECT SUM(amount)
+                FROM transactions
+                WHERE user_id = ?
+                AND type = 'income'
+                """,
+                (user_id,)
+            )
+
+            expense_cursor = await db.execute(
+                """
+                SELECT SUM(amount)
+                FROM transactions
+                WHERE user_id = ?
+                AND type = 'expense'
+                """,
+                (user_id,)
+            )
+
+            income_result = await income_cursor.fetchone()
+            expense_result = await expense_cursor.fetchone()
+
+            income = income_result[0] or 0
+            expense = expense_result[0] or 0
+
+            balance = income - expense
+
+            return {
+                "income": income,
+                "expense": expense,
+                "balance": balance
+            }
+
+    @staticmethod
+    async def get_expense_categories(user_id: int):
         async with aiosqlite.connect(DATABASE_NAME) as db:
             cursor = await db.execute(
                 """
-                SELECT * FROM transactions
-                WHERE user_id=? AND created_at>=?
-                ORDER BY created_at DESC
+                SELECT category, SUM(amount)
+
+                FROM transactions
+
+                WHERE user_id = ?
+                AND type = 'expense'
+
+                GROUP BY category
+
+                ORDER BY SUM(amount) DESC
                 """,
-                (user_id, start_date)
+                (user_id,)
             )
-            return await cursor.fetchall()
+
+            categories = await cursor.fetchall()
+
+            return categories
