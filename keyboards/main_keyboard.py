@@ -17,7 +17,12 @@ main_keyboard = ReplyKeyboardMarkup(
 
         [
             KeyboardButton(text="🎯 Цели")
+        ],
+
+        [
+            KeyboardButton(text="🚪 Выйти")
         ]
+
 
     ],
     resize_keyboard=True

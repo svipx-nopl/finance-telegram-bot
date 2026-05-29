@@ -2,10 +2,14 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram import F
-import matplotlib.pyplot as plt
 from aiogram.types import FSInputFile
+from utils.auth import check_user_registered
 
-from repositories.transaction_repository import TransactionRepository
+from utils.charts import create_expense_chart
+
+from repositories.transaction_repository import (
+    TransactionRepository
+)
 
 router = Router()
 
@@ -17,9 +21,14 @@ async def statistics_handler(message: Message):
         message.from_user.id
     )
 
-    categories = await TransactionRepository.get_expense_categories(
-        message.from_user.id
+    categories = await (
+        TransactionRepository
+        .get_expense_categories(
+            message.from_user.id
+        )
     )
+
+    total_expense = stats["expense"]
 
     text = (
         "📊 Статистика:\n\n"
@@ -33,8 +42,6 @@ async def statistics_handler(message: Message):
 
         text += "📂 Категории расходов:\n\n"
 
-        total_expense = stats["expense"]
-
         for category, amount in categories:
 
             percent = (
@@ -47,38 +54,23 @@ async def statistics_handler(message: Message):
                 f"({percent:.1f}%)\n"
             )
 
-    if categories:
+        categories_dict = {
+            category: amount
+            for category, amount in categories
+        }
 
-        labels = []
-        amounts = []
-
-        for category, amount in categories:
-            labels.append(category)
-            amounts.append(amount)
-
-        plt.figure(figsize=(7, 7))
-
-        plt.pie(
-            amounts,
-            labels=labels,
-            autopct='%1.1f%%'
+        chart_path = create_expense_chart(
+            categories_dict
         )
 
-        plt.title("Структура расходов")
+        if chart_path:
 
-        chart_path = "charts/expenses_pie.png"
+            photo = FSInputFile(chart_path)
 
-        plt.savefig(chart_path)
-
-        plt.close()
-
-        photo = FSInputFile(chart_path)
-
-        await message.answer_photo(
-            photo=photo,
-            caption="📊 График расходов"
-        )
-
+            await message.answer_photo(
+                photo=photo,
+                caption="📊 График расходов"
+            )
 
     await message.answer(text)
 
@@ -86,63 +78,8 @@ async def statistics_handler(message: Message):
 @router.message(F.text == "📊 Статистика")
 async def statistics_button_handler(message: Message):
 
-    stats = await TransactionRepository.get_statistics(
-        message.from_user.id
-    )
+    if not await check_user_registered(message):
+        return
 
-    categories = await TransactionRepository.get_expense_categories(
-        message.from_user.id
-    )
+    await statistics_handler(message)
 
-    text = (
-        "📊 Статистика:\n\n"
-
-        f"💰 Доходы: {stats['income']} ₽\n"
-        f"💸 Расходы: {stats['expense']} ₽\n"
-        f"💵 Баланс: {stats['balance']} ₽\n\n"
-    )
-
-    if categories:
-
-        text += "📂 Категории расходов:\n\n"
-
-        total_expense = stats["expense"]
-
-        for category, amount in categories:
-
-            percent = (
-                amount / total_expense
-            ) * 100
-
-            text += (
-                f"📌 {category} — "
-                f"{amount} ₽ "
-                f"({percent:.1f}%)\n"
-            )
-
-
-        if categories:
-
-            labels = []
-            amounts = []
-
-            for category, amount in categories:
-
-                labels.append(category)
-                amounts.append(amount)
-
-            plt.figure(figsize=(7, 7))
-
-            plt.pie(amounts, labels=labels, autopct='%1.1f%%')
-
-            plt.title("Структура расходов")
-
-            chart_path = "charts/expenses_pie.png"
-
-            plt.savefig(chart_path)
-
-            photo = FSInputFile(chart_path)
-
-            await message.answer_photo(photo=photo,captioon="📊 График расходов")
-
-    await message.answer(text)

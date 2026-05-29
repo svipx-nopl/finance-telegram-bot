@@ -20,3 +20,20 @@ class UserRepository:
                 (telegram_id,)
             )
             return await cursor.fetchone()
+
+    @staticmethod
+    async def delete_user(telegram_id):
+
+        async with aiosqlite.connect(DATABASE_NAME) as db:
+
+            cursor = await db.execute(
+                """
+                DELETE FROM users
+                WHERE telegram_id = ?
+                """,
+                (telegram_id,)
+            )
+
+            await db.commit()
+
+            return cursor.rowcount

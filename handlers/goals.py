@@ -2,9 +2,12 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram import F
+from utils.auth import check_user_registered
 
 from repositories.goal_repository import GoalRepository
 from repositories.transaction_repository import TransactionRepository
+
+from utils.validators import validate_amount
 
 router = Router()
 
@@ -23,7 +26,13 @@ async def set_goal_handler(message: Message):
 
         return
 
-    target_amount = float(args[1])
+    is_valid, result = validate_amount(args[1])
+
+    if not is_valid:
+        await message.answer(result)
+        return
+
+    target_amount = result
 
     description = " ".join(args[2:])
 
@@ -67,9 +76,16 @@ async def goals_handler(message: Message):
 
         target_amount, description = goal
 
-        progress = (
-            current_balance / target_amount
-        ) * 100
+        if target_amount <= 0:
+
+            progress = 0
+
+        else:
+
+            progress = min(
+                (current_balance / target_amount) * 100,
+                100
+            )
 
         if progress > 100:
             progress = 100
@@ -92,6 +108,9 @@ async def goals_handler(message: Message):
 
 @router.message(F.text == "🎯 Цели")
 async def goals_button_handler(message: Message):
+
+    if not await check_user_registered(message):
+        return
 
     goals = await GoalRepository.get_goals(
         message.from_user.id
@@ -119,9 +138,16 @@ async def goals_button_handler(message: Message):
 
         target_amount, description = goal
 
-        progress = (
-            current_balance / target_amount
-        ) * 100
+        if target_amount <= 0:
+
+            progress = 0
+
+        else:
+
+            progress = min(
+                (current_balance / target_amount) * 100,
+                100
+            )
 
         if progress > 100:
             progress = 100

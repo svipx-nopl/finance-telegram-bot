@@ -1,4 +1,3 @@
-
 import os
 import matplotlib.pyplot as plt
 
@@ -28,4 +27,3 @@ def create_expense_chart(categories):
     plt.close()
 
     return path
-

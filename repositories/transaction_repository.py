@@ -27,7 +27,7 @@ class TransactionRepository:
                     transaction_type,
                     amount,
                     category,
-                    datetime.now().strftime("%d.%m.%Y %H:%M")
+                    datetime.now().isoformat()
                 )
             )
 
@@ -40,7 +40,7 @@ class TransactionRepository:
 
             cursor = await db.execute(
                 """
-                SELECT type, amount, category, created_at
+                SELECT id, type, amount, category, created_at
                 FROM transactions
                 WHERE user_id = ?
                 ORDER BY created_at DESC
@@ -113,3 +113,27 @@ class TransactionRepository:
             categories = await cursor.fetchall()
 
             return categories
+
+    @staticmethod
+    async def delete_transaction(
+            transaction_id,
+            user_id
+    ):
+        async with aiosqlite.connect(
+                DATABASE_NAME
+        ) as db:
+
+            cursor = await db.execute(
+                """
+                DELETE FROM transactions
+                WHERE id = ?
+                AND user_id = ?
+                """,
+                (transaction_id, user_id)
+            )
+
+            await db.commit()
+
+            return cursor.rowcount
+
+

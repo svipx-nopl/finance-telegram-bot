@@ -29,9 +29,18 @@ class GoalService:
         result = []
 
         for goal in goals:
-            _, _, target_amount, description, _ = goal
+            target_amount, description = goal
 
-            progress = min((balance / target_amount) * 100, 100)
+            if target_amount <= 0:
+
+                progress = 0
+
+            else:
+
+                progress = min(
+                    (balance / target_amount) * 100,
+                    100
+                )
 
             result.append({
                 "description": description,

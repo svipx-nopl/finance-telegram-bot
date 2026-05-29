@@ -3,6 +3,10 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from middlewares.error_handler import (
+    ErrorMiddleware
+)
+
 
 from config import BOT_TOKEN
 
@@ -13,6 +17,7 @@ from handlers.auth import router as auth_router
 from handlers.transactions import router as transactions_router
 from handlers.goals import router as goals_router
 from handlers.statistics import router as statistics_router
+from middlewares.auth_middleware import AuthMiddleware
 
 
 
@@ -24,6 +29,18 @@ bot = Bot(
 )
 
 dp = Dispatcher()
+
+from middlewares.auth_middleware import AuthMiddleware
+
+dp.message.middleware(AuthMiddleware())
+
+dp.update.middleware(
+    ErrorMiddleware()
+)
+
+dp.update.middleware(
+    AuthMiddleware()
+)
 
 
 dp.include_router(start_router)

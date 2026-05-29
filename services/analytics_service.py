@@ -17,7 +17,8 @@ class AnalyticsService:
         categories = defaultdict(float)
 
         for transaction in transactions:
-            _, _, t_type, amount, category, _ = transaction
+
+            transaction_id, t_type, amount, category, created_at = transaction
 
             if t_type == "income":
                 total_income += amount

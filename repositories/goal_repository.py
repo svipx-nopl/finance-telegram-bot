@@ -35,7 +35,7 @@ class GoalRepository:
 
             cursor = await db.execute(
                 """
-                SELECT target_amount, description
+                SELECT id, target_amount, description
                 FROM goals
                 WHERE user_id = ?
                 """,
@@ -45,3 +45,27 @@ class GoalRepository:
             goals = await cursor.fetchall()
 
             return goals
+
+    @staticmethod
+    async def delete_goal(
+        goal_id: int,
+        user_id: int
+    ):
+
+        async with aiosqlite.connect(DATABASE_NAME) as db:
+
+            cursor = await db.execute(
+                """
+                DELETE FROM goals
+                WHERE id = ?
+                AND user_id = ?
+                """,
+                (
+                    goal_id,
+                    user_id
+                )
+            )
+
+            await db.commit()
+
+            return cursor.rowcount
