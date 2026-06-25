@@ -21,9 +21,6 @@ from handlers.unknown import router as unknown_router
 from middlewares.error_handler import ErrorMiddleware
 from middlewares.auth_middleware import AuthMiddleware
 
-import logging
-
-logging.basicConfig(level=logging.INFO)
 
 bot = Bot(
     token=BOT_TOKEN,
@@ -56,11 +53,10 @@ def main():
 
     app.router.add_get("/health", health)
 
-    web.run_app(
-        app,
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8080))
-    )
+    app.on_startup.append(lambda app: on_startup(bot))
+
+    port = int(os.getenv("PORT", 8080))
+    web.run_app(app, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":
