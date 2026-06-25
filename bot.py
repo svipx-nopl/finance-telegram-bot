@@ -8,6 +8,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 
 from config import BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH
 from health import health
+from init_db import init_db
 
 from handlers.start import router as start_router
 from handlers.help import router as help_router
@@ -41,6 +42,7 @@ dp.include_router(unknown_router)
 
 
 async def on_startup(app):
+    await init_db()
     await bot.set_webhook(WEBHOOK_URL)
 
 
