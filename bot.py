@@ -4,9 +4,10 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
-from config import BOT_TOKEN
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 
-from database.db import create_tables
+from config import BOT_TOKEN
 
 from handlers.start import router as start_router
 from handlers.help import router as help_router
@@ -20,6 +21,9 @@ from middlewares.error_handler import ErrorMiddleware
 from middlewares.auth_middleware import AuthMiddleware
 
 
+WEBHOOK_PATH = "/webhook"
+
+
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -27,11 +31,9 @@ bot = Bot(
 
 dp = Dispatcher()
 
-# middlewares
 dp.message.middleware(AuthMiddleware())
 dp.update.middleware(ErrorMiddleware())
 
-# routers
 dp.include_router(start_router)
 dp.include_router(help_router)
 dp.include_router(auth_router)
@@ -41,13 +43,19 @@ dp.include_router(statistics_router)
 dp.include_router(unknown_router)
 
 
-async def main():
-    await create_tables()
+async def on_startup(bot: Bot):
+    # URL Railway мы добавим на следующем шаге
+    print("🔥 BOT STARTED (WEBHOOK MODE)")
 
-    print("🔥 BOT STARTED")
 
-    await dp.start_polling(bot)
+def main():
+    app = web.Application()
+
+    SimpleRequestHandler(dp, bot).register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+
+    web.run_app(app, host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
