@@ -1,30 +1,19 @@
 import asyncio
-
 from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
 
 from config import BOT_TOKEN
 
-from handlers.start import router as start_router
-
-
-bot = Bot(
-    token=BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
-
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# подключаем ТОЛЬКО старт
-dp.include_router(start_router)
-
+@dp.message()
+async def debug(message):
+    print("🔥 DEBUG HIT:", message.text)
+    await message.answer("OK")
 
 async def main():
-    print("🔥 BOT STARTED")
-
+    print("BOT STARTED")
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
