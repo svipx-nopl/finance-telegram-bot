@@ -26,7 +26,7 @@ def validate_amount(amount):
     if amount <= 0:
         return False, "❌ Сумма должна быть больше 0."
 
-    if amount > 100000000:
+    if amount > 1_000_000:
         return False, "❌ Слишком большая сумма."
 
     return True, amount

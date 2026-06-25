@@ -66,7 +66,7 @@ async def logout_handler(message: Message):
     )
 
 @router.message(F.text == "🚪 Выйти")
-async def logout_handler(message: Message):
+async def logout_button_handler(message: Message):
 
     deleted = await UserRepository.delete_user(
         message.from_user.id

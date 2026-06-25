@@ -12,6 +12,7 @@ from utils.auth import (
     check_user_registered,
     get_current_user
 )
+from aiogram.filters import StateFilter
 
 
 
@@ -175,8 +176,15 @@ async def income_start(
     message: Message,
     state: FSMContext
 ):
-
     if not await check_user_registered(message):
+        return
+
+    current_state = await state.get_state()
+
+    if current_state:
+        await message.answer(
+            "❌ Сначала завершите текущее действие или используйте /cancel"
+        )
         return
 
     await state.set_state(
@@ -197,8 +205,15 @@ async def expense_start(
     message: Message,
     state: FSMContext
 ):
-
     if not await check_user_registered(message):
+        return
+
+    current_state = await state.get_state()
+
+    if current_state:
+        await message.answer(
+            "❌ Сначала завершите текущее действие или используйте /cancel"
+        )
         return
 
     await state.set_state(
@@ -254,7 +269,10 @@ state: FSMContext
     )
 
 
-@router.message(AddTransactionState.waiting_for_amount)
+@router.message(
+    AddTransactionState.waiting_for_amount,
+    ~F.text.startswith("/")
+)
 async def invalid_amount(
     message: Message,
     state: FSMContext
@@ -269,10 +287,13 @@ async def invalid_amount(
     )
 
 
-@router.message(AddTransactionState.waiting_for_category)
+@router.message(
+    AddTransactionState.waiting_for_category,
+    ~F.text.startswith("/")
+)
 async def process_category(
-message: Message,
-state: FSMContext
+    message: Message,
+    state: FSMContext
 ):
 
     if not await check_user_registered(message):
@@ -413,8 +434,8 @@ async def delete_transaction_start(
 
 
 @router.message(
-    AddTransactionState
-    .waiting_for_delete_id
+    AddTransactionState.waiting_for_delete_id,
+    ~F.text.startswith("/")
 )
 async def process_delete_transaction(
     message: Message,
@@ -458,27 +479,18 @@ async def process_delete_transaction(
         "✅ Транзакция удалена."
     )
 
-@router.message(Command("cancel"))
+@router.message(
+    StateFilter("*"),
+    Command("cancel")
+)
 async def cancel_handler(
     message: Message,
     state: FSMContext
 ):
-    if not await check_user_registered(message):
-        await state.clear()
-        return
-
-    current_state = await state.get_state()
-
-    if current_state is None:
-
-        await message.answer(
-            "❌ Нет активного действия."
-        )
-
-        return
-
     await state.clear()
 
     await message.answer(
         "✅ Действие отменено."
     )
+
+

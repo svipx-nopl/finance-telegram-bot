@@ -20,6 +20,10 @@ main_keyboard = ReplyKeyboardMarkup(
         ],
 
         [
+            KeyboardButton(text="🗑 Удалить транзакцию")
+        ],
+
+        [
             KeyboardButton(text="🚪 Выйти")
         ]
 

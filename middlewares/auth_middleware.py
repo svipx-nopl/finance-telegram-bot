@@ -13,23 +13,32 @@ class AuthMiddleware(BaseMiddleware):
         data
     ):
 
+        if not event.text:
+            return await handler(event, data)
+
         allowed_commands = [
             "/start",
             "/register",
-            "/login"
+            "/login",
+            "/logout",
+            "/cancel"
         ]
 
-        if event.text:
-
-            if any(
+        if (
+            event.text == "🚪 Выйти"
+            or any(
                 event.text.startswith(cmd)
                 for cmd in allowed_commands
-            ):
-                return await handler(event, data)
+            )
+        ):
+            return await handler(event, data)
 
-        is_registered = await check_user_registered(event)
+        is_registered = await check_user_registered(
+            event
+        )
 
         if not is_registered:
             return
 
         return await handler(event, data)
+
