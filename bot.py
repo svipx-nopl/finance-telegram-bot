@@ -36,11 +36,11 @@ dp.message.middleware(AuthMiddleware())
 dp.update.middleware(ErrorMiddleware())
 
 dp.include_router(start_router)
-dp.include_router(help_router)
 dp.include_router(auth_router)
 dp.include_router(transactions_router)
 dp.include_router(goals_router)
 dp.include_router(statistics_router)
+dp.include_router(help_router)
 dp.include_router(unknown_router)
 
 
