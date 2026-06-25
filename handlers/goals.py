@@ -109,8 +109,6 @@ async def goals_handler(message: Message):
 @router.message(F.text == "🎯 Цели")
 async def goals_button_handler(message: Message):
 
-    if not await check_user_registered(message):
-        return
 
     goals = await GoalRepository.get_goals(
         message.from_user.id

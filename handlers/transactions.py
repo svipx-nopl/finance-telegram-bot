@@ -24,8 +24,6 @@ router = Router()
 
 @router.message(Command("add_income"))
 async def add_income_handler(message: Message):
-    if not await check_user_registered(message):
-        return
 
     args = message.text.split()
 
@@ -172,10 +170,7 @@ async def view_transactions_handler(message: Message):
 
 
 @router.message(F.text == "➕ Доход")
-async def income_start(
-    message: Message,
-    state: FSMContext
-):
+async def income_start(message: Message, state: FSMContext):
     if not await check_user_registered(message):
         return
 
@@ -187,24 +182,14 @@ async def income_start(
         )
         return
 
-    await state.set_state(
-        AddTransactionState.waiting_for_amount
-    )
+    await state.set_state(AddTransactionState.waiting_for_amount)
+    await state.update_data(transaction_type="income")
 
-    await state.update_data(
-        transaction_type="income"
-    )
-
-    await message.answer(
-        "💰 Введите сумму дохода:"
-    )
+    await message.answer("💰 Введите сумму дохода:")
 
 
 @router.message(F.text == "➖ Расход")
-async def expense_start(
-    message: Message,
-    state: FSMContext
-):
+async def expense_start(message: Message, state: FSMContext):
     if not await check_user_registered(message):
         return
 
@@ -216,17 +201,10 @@ async def expense_start(
         )
         return
 
-    await state.set_state(
-        AddTransactionState.waiting_for_amount
-    )
+    await state.set_state(AddTransactionState.waiting_for_amount)
+    await state.update_data(transaction_type="expense")
 
-    await state.update_data(
-        transaction_type="expense"
-    )
-
-    await message.answer(
-        "💸 Введите сумму расхода:"
-    )
+    await message.answer("💸 Введите сумму расхода:")
 
 
 @router.message(

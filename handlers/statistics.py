@@ -78,8 +78,5 @@ async def statistics_handler(message: Message):
 @router.message(F.text == "📊 Статистика")
 async def statistics_button_handler(message: Message):
 
-    if not await check_user_registered(message):
-        return
-
     await statistics_handler(message)
 

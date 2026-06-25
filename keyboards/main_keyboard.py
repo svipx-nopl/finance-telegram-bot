@@ -1,10 +1,7 @@
-from aiogram.types import ReplyKeyboardMarkup
-from aiogram.types import KeyboardButton
-
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-
         [
             KeyboardButton(text="➕ Доход"),
             KeyboardButton(text="➖ Расход")
@@ -26,8 +23,6 @@ main_keyboard = ReplyKeyboardMarkup(
         [
             KeyboardButton(text="🚪 Выйти")
         ]
-
-
     ],
     resize_keyboard=True
 )

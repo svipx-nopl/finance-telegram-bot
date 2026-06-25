@@ -5,18 +5,15 @@ from utils.auth import check_user_registered
 
 
 class AuthMiddleware(BaseMiddleware):
+    async def __call__(self, handler, event: Message, data):
 
-    async def __call__(
-        self,
-        handler,
-        event: Message,
-        data
-    ):
+        if not isinstance(event, Message):
+            return await handler(event, data)
 
         if not event.text:
             return await handler(event, data)
 
-        allowed_commands = [
+        allowed = [
             "/start",
             "/register",
             "/login",
@@ -24,21 +21,13 @@ class AuthMiddleware(BaseMiddleware):
             "/cancel"
         ]
 
-        if (
-            event.text == "🚪 Выйти"
-            or any(
-                event.text.startswith(cmd)
-                for cmd in allowed_commands
-            )
-        ):
+        if event.text == "🚪 Выйти" or any(event.text.startswith(cmd) for cmd in allowed):
             return await handler(event, data)
 
-        is_registered = await check_user_registered(
-            event
-        )
+        is_registered = await check_user_registered(event)
 
         if not is_registered:
+            await event.answer("❌ Сначала зарегистрируйтесь: /register")
             return
 
         return await handler(event, data)
-

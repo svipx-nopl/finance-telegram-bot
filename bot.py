@@ -20,9 +20,7 @@ from handlers.unknown import router as unknown_router
 from middlewares.error_handler import ErrorMiddleware
 from middlewares.auth_middleware import AuthMiddleware
 
-
 WEBHOOK_PATH = "/webhook"
-
 
 bot = Bot(
     token=BOT_TOKEN,
@@ -31,9 +29,11 @@ bot = Bot(
 
 dp = Dispatcher()
 
+# middleware
 dp.message.middleware(AuthMiddleware())
 dp.update.middleware(ErrorMiddleware())
 
+# routers
 dp.include_router(start_router)
 dp.include_router(help_router)
 dp.include_router(auth_router)
@@ -44,7 +44,6 @@ dp.include_router(unknown_router)
 
 
 async def on_startup(bot: Bot):
-    # URL Railway мы добавим на следующем шаге
     print("🔥 BOT STARTED (WEBHOOK MODE)")
 
 
